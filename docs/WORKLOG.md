@@ -44,3 +44,21 @@ distribution, data storage), produced `PRD.md`, then built to it:
 `status.json`) are gitignored — they contain the actual competitive-
 research targets and scraped article text, not source. `feeds.example.json`
 / `keywords.example.json` ship instead as templates.
+
+**Later same day:**
+
+- Applied the per-feed `cap` (top-3 by TF-IDF relevance, running total) to
+  every feed, not just arXiv — same drowning-out problem was starting on
+  other high-volume feeds
+- Checked each feed's actual RSS time range empirically (feedparser
+  `published_parsed`, not something we control) — varies from same-day
+  only (arXiv) to a ~12.7-year full archive (Ahead of AI/Raschka); the
+  per-feed cap absorbs that variance rather than trying to filter by date
+- Set up `launchd` to run `app.py` as a persistent background service
+  (starts at login, restarts on crash) instead of a terminal/VSCode
+  staying open — added `launchd/com.signaldigest.app.plist.example` to
+  the repo as a template. Turned off Flask debug mode for this (`app.run`
+  no longer passes `debug=True`) since a service left running
+  indefinitely shouldn't expose Werkzeug's interactive debugger, even
+  though it's localhost-only; tradeoff is code changes now need a manual
+  `launchctl kickstart -k` instead of auto-reloading

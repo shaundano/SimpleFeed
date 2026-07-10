@@ -24,6 +24,27 @@ python3 app.py
 Open `http://127.0.0.1:5050`. From there you can add/remove feeds, add/remove
 global keywords, and hit "Refresh now" to fetch.
 
+## Running it in the background (launchd, macOS)
+
+For daily use you probably don't want a terminal window open just to keep
+the web UI alive. `launchd` will run it as a background service that starts
+at login and restarts itself if it ever crashes:
+
+```bash
+mkdir -p logs
+cp launchd/com.signaldigest.app.plist.example ~/Library/LaunchAgents/com.signaldigest.app.plist
+# edit that copy: replace /path/to/python3 and /path/to/SimpleFeed with your
+# actual paths (`which python3` for the former)
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.signaldigest.app.plist
+```
+
+Then bookmark `http://127.0.0.1:5050` and it's always there when you click it.
+
+- Logs: `logs/app.log` / `logs/app.err.log`
+- Restart after a code change (auto-reload is off in this mode):
+  `launchctl kickstart -k gui/$(id -u)/com.signaldigest.app`
+- Stop: `launchctl bootout gui/$(id -u)/com.signaldigest.app`
+
 ## How it works
 
 - `core.py` — shared fetch → filter → dedup logic (fetches each feed,
