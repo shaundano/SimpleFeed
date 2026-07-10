@@ -62,3 +62,23 @@ research targets and scraped article text, not source. `feeds.example.json`
   indefinitely shouldn't expose Werkzeug's interactive debugger, even
   though it's localhost-only; tradeoff is code changes now need a manual
   `launchctl kickstart -k` instead of auto-reloading
+
+**Bug fix + distribution polish (for sharing):**
+
+- Fixed stale matches: `run_refresh` only ever *appended* to
+  `matches.json`, so deleting a feed or keyword left its old matches behind
+  forever (saw removed keyword `VLA` and removed feed `BAIR Blog` still
+  showing). Added `reconcile_matches()` — on every refresh it re-checks
+  stored matches against the *current* feeds + keywords, drops any whose
+  feed is gone or that no longer hit a keyword, and recomputes
+  `matched_keywords` so highlights stay accurate. Also called via
+  `prune_matches()` right after a feed/keyword delete so removal is
+  instant, not deferred to the next refresh. Verified on live data:
+  10 matches → 6, BAIR and VLA gone
+- Made distribution plug-and-play for a friend: app already runs with no
+  `feeds.json` (defaults to empty), so the quick start is just clone →
+  `pip3 install` → `python3 app.py`, add feeds in the UI. Added
+  `run-in-background.sh` — a one-command launchd installer that generates
+  the plist with the right paths (`which python3`, `pwd`), so background
+  setup no longer means hand-editing a template. Rewrote the README around
+  both

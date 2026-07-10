@@ -196,13 +196,45 @@ def new_id():
     return uuid.uuid4().hex[:8]
 
 
+def reconcile_matches(matches, feeds, global_keywords):
+    """Re-check already-stored matches against the *current* feeds and
+    keywords. Dropping a feed or a keyword used to leave its matches behind
+    forever, because refresh only ever appended. Here we drop any match
+    whose feed no longer exists or that no longer hits any current keyword,
+    and recompute matched_keywords so highlights stay accurate."""
+    feed_keywords_by_name = {
+        f["name"]: global_keywords + f.get("keywords", []) for f in feeds
+    }
+    kept = []
+    for m in matches:
+        keywords = feed_keywords_by_name.get(m["source"])
+        if keywords is None:
+            continue  # feed was removed
+        hits = find_matches(f"{m['title']} {m['summary']}", keywords)
+        if not hits:
+            continue  # no longer matches any current keyword
+        m["matched_keywords"] = hits
+        kept.append(m)
+    return kept
+
+
+def prune_matches():
+    """Reconcile persisted matches against current feeds/keywords and save.
+    Called after a feed/keyword is deleted so stale matches disappear
+    immediately, without waiting for the next refresh."""
+    matches = load_matches()
+    pruned = reconcile_matches(matches, load_feeds(), [k["term"] for k in load_keywords()])
+    save_matches(pruned)
+    return pruned
+
+
 def run_refresh():
     """Fetch all feeds, filter by keywords, dedup, persist matches + feed
     health. Returns the list of newly-added match dicts."""
     feeds = load_feeds()
     global_keywords = [k["term"] for k in load_keywords()]
     seen = load_seen()
-    matches = load_matches()
+    matches = reconcile_matches(load_matches(), feeds, global_keywords)
     status = load_status()
 
     new_results = []

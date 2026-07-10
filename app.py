@@ -59,6 +59,7 @@ def add_feed():
 def delete_feed(feed_id):
     feeds = [f for f in core.load_feeds() if f["id"] != feed_id]
     core.save_feeds(feeds)
+    core.prune_matches()  # drop matches from the feed we just removed
     return redirect(url_for("index"))
 
 
@@ -76,6 +77,7 @@ def add_keyword():
 def delete_keyword(keyword_id):
     keywords = [k for k in core.load_keywords() if k["id"] != keyword_id]
     core.save_keywords(keywords)
+    core.prune_matches()  # drop matches that only hit the keyword we removed
     return redirect(url_for("index"))
 
 

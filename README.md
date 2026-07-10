@@ -11,45 +11,46 @@ SEO-polluted search results or someone else's curation. See
 [`docs/spec.md`](docs/spec.md) for the original problem statement and
 [`docs/PRD.md`](docs/PRD.md) for the v1 design decisions.
 
-## Quick start
+## Quick start (macOS)
+
+You need Python 3 (`python3 --version`). Then:
 
 ```bash
-pip install -r requirements.txt
-cp feeds.example.json feeds.json
-cp keywords.example.json keywords.json
-# edit feeds.json / keywords.json with your own feeds and keywords
+git clone https://github.com/shaundano/SimpleFeed.git
+cd SimpleFeed
+pip3 install -r requirements.txt
 python3 app.py
 ```
 
-Open `http://127.0.0.1:5050`. From there you can add/remove feeds, add/remove
-global keywords, and hit "Refresh now" to fetch.
+Open **http://127.0.0.1:5050**. It starts empty — add your feeds and
+keywords right in the UI, then hit "Refresh now". That's it.
 
-## Running it in the background (launchd, macOS)
+Not sure what to put in? `feeds.example.json` / `keywords.example.json` show
+the format and a couple of real feeds to try.
 
-For daily use you probably don't want a terminal window open just to keep
-the web UI alive. `launchd` will run it as a background service that starts
-at login and restarts itself if it ever crashes:
+## Keep it running in the background
+
+So you don't need a terminal open. One command installs it as a macOS
+background service that starts at login and restarts itself if it crashes:
 
 ```bash
-mkdir -p logs
-cp launchd/com.signaldigest.app.plist.example ~/Library/LaunchAgents/com.signaldigest.app.plist
-# edit that copy: replace /path/to/python3 and /path/to/SimpleFeed with your
-# actual paths (`which python3` for the former)
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.signaldigest.app.plist
+./run-in-background.sh
 ```
 
-Then bookmark `http://127.0.0.1:5050` and it's always there when you click it.
+Then **bookmark http://127.0.0.1:5050** — it's always there when you click it.
 
 - Logs: `logs/app.log` / `logs/app.err.log`
-- Restart after a code change (auto-reload is off in this mode):
-  `launchctl kickstart -k gui/$(id -u)/com.signaldigest.app`
-- Stop: `launchctl bootout gui/$(id -u)/com.signaldigest.app`
+- Restart after a code change: `./run-in-background.sh` (just re-run it)
+- Stop it: `launchctl bootout gui/$(id -u)/com.signaldigest.app`
 
 ## How it works
 
 - `core.py` — shared fetch → filter → dedup logic (fetches each feed,
   matches title+summary against your keywords, dedups against `seen.json`,
-  persists results to `matches.json`)
+  persists results to `matches.json`). On every refresh it also re-checks
+  the matches it already has against your *current* feeds and keywords, so
+  deleting a feed or keyword removes its matches instead of leaving them
+  stranded
 - `app.py` — Flask web UI, single main view, wraps `core.py`
 - `digest.py` — thin cron/launchd entrypoint, calls the same `core.py` logic
   for scheduled (non-interactive) runs
