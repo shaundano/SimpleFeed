@@ -1,0 +1,15 @@
+[
+  {
+    "id": "example1",
+    "name": "arXiv (cs.AI)",
+    "url": "https://rss.arxiv.org/rss/cs.AI",
+    "keywords": []
+  },
+  {
+    "id": "example2",
+    "name": "Example Substack",
+    "url": "https://example.substack.com/feed",
+    "keywords": [],
+    "cap": 3
+  }
+]

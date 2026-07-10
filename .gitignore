@@ -1,0 +1,15 @@
+# Personal data -- your actual feeds/keywords and everything derived from
+# them. See feeds.example.json / keywords.example.json for templates.
+feeds.json
+keywords.json
+matches.json
+seen.json
+status.json
+
+# Legacy, superseded by feeds.json/keywords.json -- same real data, unused
+# by any code now. Kept on disk but not published; delete whenever you like.
+config.yaml
+
+__pycache__/
+*.pyc
+.DS_Store
